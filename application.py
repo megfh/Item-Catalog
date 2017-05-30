@@ -293,7 +293,14 @@ def deleteItem(category_id, item_id):
             session.delete(itemToDelete)
             session.commit()
             flash('item successfully deleted')
-            return redirect(url_for('showCategory', category_id=category_id))
+            # if no items left in category - delete the category
+            categoryToDelete = session.query(Category).filter_by(id=category_id).one()
+            itemsInCategory = session.query(Item).filter_by(category_id=category_id).first()
+            if itemsInCategory is None:
+                # get rid of empty category
+                session.delete(categoryToDelete)
+                session.commit()
+            return redirect(url_for('showCatalog'))
         else:
             return redirect(url_for('showItem', category_id=category_id, item_id=item_id))
     else:
