@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+
+  <h2>New Catalog Item</h2>
+
+    <form method="post">
+      <label>
+        <div>Item</div>
+        <input type="text" name="item" placeholder="item" value="{{item}}">
+      </label>
+
+      <!-- <div class="container"> -->
+        <div>Category</div>
+        <div class="row">
+          <div class="col-md-4">
+            <select name="category">
+              {% for category in categories %}
+                <option value="{{category.name}}">{{category.name}}</option>
+              {% endfor %}
+              <option value="new">add new category</option>
+            </select>
+          </div>
+          <div class="col-md-8">
+            <label>
+              <input type="text" name="new-category" placeholder="new category" value="{{category}}">
+            </label>
+          </div>
+        </div>
+      <!-- </div> -->
+
+
+
+      <label>
+        <div>Description</div>
+        <textarea name="description">{{description}}</textarea>
+      </label>
+
+      <div class="error">{{error}}</div>
+
+      <button type="submit" class="btn btn-default" id="submit" type="submit">Submit</button>
+
+    </form>
+
+{% endblock %}
+

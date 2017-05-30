@@ -1,0 +1,21 @@
+
+.container {
+    max-width: 80%;
+}
+
+.login-area {
+    display: block;
+    float: right;
+
+
+}
+
+.home-link {
+    float: left;
+    font-style: italic;
+}
+
+.item-description {
+    font-size: 18;
+    color: #f44242;
+}

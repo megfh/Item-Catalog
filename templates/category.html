@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row">
+  <div class="col-md-4">
+    <h1 class="categories">Categories</h1>
+    {% for cat in categories %}
+      <a href = "{{url_for('showCategory', category_id = cat.id)}}">
+        <div class="category-list">
+          <h3>{{cat.name}}</h3>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+  <!--vertical rule???-->
+  <!--check if user is logged in and have link to add new item-->
+  <div class="col-md-8">
+    <h1 class="selected-cat">{{category.name}} Items</h1>
+    {% for i in items %}
+      <a href = "{{url_for('showItem', category_id=category.id, item_id = i.id)}}">
+        <div class="item-list">
+          <h3>{{i.name}}</h3>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+</div>
+
+
+
+
+{% endblock %}

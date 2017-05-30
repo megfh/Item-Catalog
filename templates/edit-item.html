@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+
+  <h1>Edit Item</h1>
+
+    <div class="interactive">
+      <span class="delete">
+        <a class="delete-link" href="{{url_for('deleteItem', category_id = item.category_id, item_id = item.id )}}">delete</a>
+      </span> |
+      <span class="cancel">
+        <a href="{{url_for('showItem', category_id = item.category_id, item_id = item.id)}}">cancel</a>
+      </span>
+    </div>
+    <br>
+    <form method="post">
+      <label>
+        <div>Item</div>
+        <input type="text" name="item" value="{{item.name}}">
+      </label>
+      <br><br>
+      <div><b>Category</b></div>
+      <div>{{item.category.name}}</div>
+      <br>
+      <label>
+        <div>Description</div>
+        <textarea name="description">{{item.description}}</textarea>
+      </label>
+
+      <div class="error">{{error}}</div>
+
+      <button type="submit" class="btn btn-default" id="submit" type="submit">Submit</button>
+
+    </form>
+
+{% endblock %}
