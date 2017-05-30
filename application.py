@@ -1,9 +1,11 @@
 # Udacity Full Stack Nanodegree Project: Item Catalog
-# a web application that provides a list of items within a variety of categories
-# and integrates third party user registration and authentication. Authenticated
-# users have the ability to post, edit, and delete their own items
+# a web application that provides a list of items within a variety of
+# categories and integrates third party user registration and authentication.
+# Authenticated users have the ability to post, edit, and delete
+# their own items
 
-from flask import Flask, render_template, request, redirect, jsonify, url_for, flash
+from flask import (Flask, render_template, request, redirect,
+                   jsonify, url_for, flash)
 from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Category, Item, User
@@ -30,6 +32,7 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
+
 # Create anti-forgery state token
 @app.route('/login')
 def showLogin():
@@ -40,6 +43,7 @@ def showLogin():
     return render_template('login.html', STATE=state)
 
 
+# google plus login function
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
     # Validate state token
@@ -92,7 +96,8 @@ def gconnect():
     stored_credentials = login_session.get('credentials')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_credentials is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected.'),
+        response = make_response(json.dumps('Current user is already \
+                                            connected.'),
                                  200)
         response.headers['Content-Type'] = 'application/json'
         return response
@@ -126,7 +131,8 @@ def gconnect():
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;\
+                -webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
     flash("you are now logged in as %s" % login_session['username'])
     print "done!"
     return output
@@ -181,6 +187,7 @@ def disconnect():
         return redirect(url_for('showCatalog'))
 
 
+# logout fron google plus
 @app.route('/gdisconnect')
 def gdisconnect():
     # Only disconnect a connected user.
@@ -206,7 +213,16 @@ def gdisconnect():
 @app.route('/catalog/JSON')
 def catalogJSON():
     categories = session.query(Category).all()
-    return jsonify(categories=[c.serialize for c in categories])
+    CategoryItems = []
+    for cat in categories:
+        serializedCat = cat.serialize
+        items = session.query(Item).filter_by(category_id=cat.id).all()
+        serializedItems = []
+        for i in items:
+            serializedItems.append(i.serialize)
+        serializedCat['items'] = serializedItems
+        CategoryItems.append(serializedCat)
+    return jsonify(Category=CategoryItems)
 
 
 @app.route('/catalog/<int:category_id>/items/JSON')
@@ -223,13 +239,13 @@ def itemJSON(category_id, item_id):
     return jsonify(Item=Item.serialize)
 
 
-@app.route('/catalog/new-item', methods=['GET', 'POST'])
+# add a new item to the database
+@app.route('/catalog/new-item/', methods=['GET', 'POST'])
 def newItem():
     if 'username' not in login_session:
         flash('You must be logged in to create a new item')
         return redirect('/login')
     if request.method == 'POST':
-        # TODO
         name = request.form['item']
         description = request.form['description']
         cat = request.form['category']
@@ -242,26 +258,30 @@ def newItem():
             cat = existingCat
         user = session.query(User).filter_by(id=login_session['user_id']).one()
         # create new item and commit to the database
-        newItem = Item(name=name, description=description, category=cat, user=user)
+        newItem = Item(name=name, description=description, category=cat,
+                       user=user)
         session.add(newItem)
         session.commit()
         flash('New Item %s successfully created' % (newItem.name))
-        return redirect(url_for('showCategory', category_id=newItem.category_id))
+        return redirect(url_for('showCategory',
+                                category_id=newItem.category_id))
     else:
         categories = session.query(Category).all()
         return render_template('new-item.html', categories=categories)
 
 
-@app.route('/catalog/category/<int:category_id>/item/<int:item_id>/edit', methods=['GET', 'POST'])
+# edit an existing item
+@app.route('/catalog/category/<int:category_id>/item/<int:item_id>/edit/',
+           methods=['GET', 'POST'])
 def editItem(category_id, item_id):
-    # TODO
     if 'username' not in login_session:
         return redirect('/login')
     editedItem = session.query(Item).filter_by(id=item_id).one()
     if login_session['user_id'] != editedItem.user_id:
         # RETURN AN ERROR MESSAGE
         flash('You cannot edit an item that you did not create')
-        return redirect(url_for('showItem', category_id=category_id, item_id=item_id))
+        return redirect(url_for('showItem', category_id=category_id,
+                                item_id=item_id))
     if request.method == 'POST':
         if request.form['item']:
             editedItem.name = request.form['item']
@@ -270,22 +290,25 @@ def editItem(category_id, item_id):
         session.add(editedItem)
         session.commit()
         flash('Item Successfully Edited')
-        return redirect(url_for('showItem', category_id=category_id, item_id=item_id))
+        return redirect(url_for('showItem', category_id=category_id,
+                                item_id=item_id))
     else:
-        return render_template('edit-item.html', category_id=category_id, item=editedItem)
+        return render_template('edit-item.html', category_id=category_id,
+                               item=editedItem)
 
 
-
-@app.route('/catalog/category/<int:category_id>/item/<int:item_id>/delete', methods=['GET', 'POST'])
+# delete an existing item from the database
+@app.route('/catalog/category/<int:category_id>/item/<int:item_id>/delete/',
+           methods=['GET', 'POST'])
 def deleteItem(category_id, item_id):
-    # TODO
     if 'username' not in login_session:
         return redirect('/login')
     itemToDelete = session.query(Item).filter_by(id=item_id).one()
     if login_session['user_id'] != itemToDelete.user_id:
         # RETURN AN ERROR MESSAGE
         flash('You cannot delete an item that you did not create')
-        return redirect(url_for('showItem', category_id=category_id, item_id=item_id))
+        return redirect(url_for('showItem', category_id=category_id,
+                                item_id=item_id))
     if request.method == 'POST':
         confirm = request.form['answer']
         if confirm == 'yes':
@@ -294,48 +317,50 @@ def deleteItem(category_id, item_id):
             session.commit()
             flash('item successfully deleted')
             # if no items left in category - delete the category
-            categoryToDelete = session.query(Category).filter_by(id=category_id).one()
-            itemsInCategory = session.query(Item).filter_by(category_id=category_id).first()
+            categoryToDelete = session.query(Category).filter_by(
+                id=category_id).one()
+            itemsInCategory = session.query(Item).filter_by(
+                category_id=category_id).first()
             if itemsInCategory is None:
                 # get rid of empty category
                 session.delete(categoryToDelete)
                 session.commit()
             return redirect(url_for('showCatalog'))
         else:
-            return redirect(url_for('showItem', category_id=category_id, item_id=item_id))
+            return redirect(url_for('showItem', category_id=category_id,
+                                    item_id=item_id))
     else:
-        return render_template('delete-item.html')
+        return render_template('delete-item.html', item=itemToDelete)
 
 
-
-@app.route('/catalog/category/<int:category_id>')
+# display the selected category's items
+@app.route('/catalog/category/<int:category_id>/')
 def showCategory(category_id):
-    # TODO
     category = session.query(Category).filter_by(id=category_id).one()
     items = session.query(Item).filter_by(category_id=category_id).all()
     categories = session.query(Category).order_by(asc(Category.name))
-    return render_template('category.html', category=category, items=items, categories=categories)
+    return render_template('category.html', category=category, items=items,
+                           categories=categories)
 
 
-
-@app.route('/catalog/category/<int:category_id>/item/<int:item_id>')
+# display the selected item
+@app.route('/catalog/category/<int:category_id>/item/<int:item_id>/')
 def showItem(category_id, item_id):
-    # TODO
     item = session.query(Item).filter_by(id=item_id).one()
     return render_template('item.html', item=item)
 
 
+# home page
 @app.route('/')
-@app.route('/catalog')
+@app.route('/catalog/')
 def showCatalog():
     categories = session.query(Category).order_by(asc(Category.name))
     items = session.query(Item).order_by(desc(Item.id)).limit(5).all()
-    return render_template('main-catalog.html', categories=categories, items=items)
+    return render_template('main-catalog.html', categories=categories,
+                           items=items)
 
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
     app.debug = True
     app.run(host='0.0.0.0', port=5000)
-
-
