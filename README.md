@@ -1,5 +1,4 @@
-# catalog
-Udacity - Item Catalog App
+# Item Catalog
 
 
 ## Description
